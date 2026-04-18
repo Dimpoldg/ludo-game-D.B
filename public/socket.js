@@ -4,7 +4,9 @@
 
 'use strict';
 
-const socket = io();
+const socket = io("https://ludo-game-d-b.onrender.com", {
+  transports: ["websocket"]
+});
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const lobbyScreen   = document.getElementById('lobby-screen');
