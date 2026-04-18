@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════
    LUDO GAME — SOCKET CLIENT + UI CONTROLLER
    ═══════════════════════════════════════════════ */
-alert("socket.js loaded");
 'use strict';
 
 const socket = io();
@@ -41,10 +40,14 @@ joinBtn.addEventListener('click', () => {
     return;
   }
 
+  if (!socket.connected) {
+    showLobbyMsg('❌ Server se connect nahi hua. Thoda wait karo ya refresh karo!', false);
+    return;
+  }
+
   joinBtn.disabled = true;
   joinBtn.textContent = 'Joining…';
   currentRoomId = room;
-
   socket.emit('joinGame', { playerName: name, roomId: room });
 });
 
@@ -262,13 +265,18 @@ socket.on('actionError', ({ message }) => {
 
 // ── connect / disconnect ──────────────────────────────────────────────────────
 socket.on('disconnect', () => {
+  showLobbyMsg('⏳ Server se connect ho raha hai... wait karo', false);
+  joinBtn.disabled = false;
+  joinBtn.textContent = 'Join Game 🚀';
   LudoGame.showToast('❌ Disconnected from server. Reconnecting…');
 });
 
 socket.on('connect', () => {
+  showLobbyMsg('✅ Server connected! Ab join kar sakte ho.', true);
+  joinBtn.disabled = false;
+  joinBtn.textContent = 'Join Game 🚀';
   if (myPlayerId) LudoGame.showToast('✅ Reconnected!');
 });
-
 // ═════════════════════════════════════════════════════════════════════════════
 //  HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
