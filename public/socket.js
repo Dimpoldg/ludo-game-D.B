@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════
    LUDO GAME — SOCKET CLIENT + UI CONTROLLER
    ═══════════════════════════════════════════════ */
+alert("socket.js loaded");
 'use strict';
 
 const socket = io();
