@@ -1,13 +1,9 @@
 /* ═══════════════════════════════════════════════
    LUDO GAME — SOCKET CLIENT + UI CONTROLLER
    ═══════════════════════════════════════════════ */
-
 'use strict';
 
-const socket = io("https://ludo-game-d-b.onrender.com", {
-  transports: ["websocket"]
-});
-
+const socket = io();
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const lobbyScreen   = document.getElementById('lobby-screen');
 const waitingScreen = document.getElementById('waiting-screen');
