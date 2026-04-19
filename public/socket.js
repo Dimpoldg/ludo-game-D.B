@@ -40,10 +40,22 @@ joinBtn.addEventListener('click', () => {
     return;
   }
 
-  if (!socket.connected) {
-    showLobbyMsg('❌ Server se connect nahi hua. Thoda wait karo ya refresh karo!', false);
+ 
+    joinBtn.addEventListener('click', () => {
+  const name = playerNameInput.value.trim();
+  const room = roomIdInput.value.trim() || 'lobby';
+
+  if (!name) {
+    showLobbyMsg('Please enter your name!', false);
+    playerNameInput.focus();
     return;
   }
+
+  joinBtn.disabled = true;
+  joinBtn.textContent = 'Joining…';
+
+  socket.emit('joinGame', { playerName: name, roomId: room });
+});
 
   joinBtn.disabled = true;
   joinBtn.textContent = 'Joining…';
