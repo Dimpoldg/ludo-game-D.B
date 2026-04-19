@@ -40,33 +40,16 @@ joinBtn.addEventListener('click', () => {
     return;
   }
 
- 
-    joinBtn.addEventListener('click', () => {
-  const name = playerNameInput.value.trim();
-  const room = roomIdInput.value.trim() || 'lobby';
-
-  if (!name) {
-    showLobbyMsg('Please enter your name!', false);
-    playerNameInput.focus();
-    return;
-  }
-
-  joinBtn.disabled = true;
-  joinBtn.textContent = 'Joining…';
-
-  socket.emit('joinGame', { playerName: name, roomId: room });
-});
-
   joinBtn.disabled = true;
   joinBtn.textContent = 'Joining…';
   currentRoomId = room;
+
   socket.emit('joinGame', { playerName: name, roomId: room });
 });
 
-playerNameInput.addEventListener('keydown', e => {
+playerNameInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') joinBtn.click();
 });
-
 // ═════════════════════════════════════════════════════════════════════════════
 //  WAITING ROOM
 // ═════════════════════════════════════════════════════════════════════════════
