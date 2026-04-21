@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>🎲 Ludo Multiplayer</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="lobby-screen" class="screen active">
+  <div class="lobby-card">
+    <div class="lobby-logo"><span class="dice-icon">🎲</span><h1>LUDO</h1><span class="dice-icon">🎲</span></div>
+    <p class="lobby-sub">Multiplayer Board Game</p>
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="online"  onclick="switchMode('online')">🌐 Online</button>
+      <button class="mode-tab"        data-mode="offline" onclick="switchMode('offline')">🤖 vs Bots</button>
+    </div>
+    <div id="online-panel">
+      <div class="form-group"><label>Your Name</label><input type="text" id="player-name" placeholder="Enter your name…" maxlength="15" autocomplete="off"/></div>
+      <div class="form-group"><label>Room ID <span>(leave blank for default)</span></label><input type="text" id="room-id" placeholder="e.g. room123" maxlength="20" autocomplete="off"/></div>
+      <button id="join-btn" class="btn btn-primary btn-lg">Join Game 🚀</button>
+    </div>
+    <div id="offline-panel" class="hidden">
+      <div class="form-group"><label>Your Name</label><input type="text" id="offline-player-name" placeholder="Enter your name…" maxlength="15" autocomplete="off"/></div>
+      <div class="form-group">
+        <label>Apna Color Chuniye</label>
+        <div class="color-selector">
+          <button class="color-btn active" data-color="red"><span class="color-circle" style="background:#e53935"></span><span>Red</span></button>
+          <button class="color-btn" data-color="green"><span class="color-circle" style="background:#43a047"></span><span>Green</span></button>
+          <button class="color-btn" data-color="yellow"><span class="color-circle" style="background:#fdd835"></span><span>Yellow</span></button>
+          <button class="color-btn" data-color="blue"><span class="color-circle" style="background:#1e88e5"></span><span>Blue</span></button>
+        </div>
+      </div>
+      <div class="form-group"><label>Kitne Bots?</label><div class="bot-selector"><button class="bot-count-btn active" data-count="1">1 Bot</button><button class="bot-count-btn" data-count="2">2 Bots</button><button class="bot-count-btn" data-count="3">3 Bots</button></div></div>
+      <div class="form-group"><label>Bot Difficulty</label><div class="diff-selector"><button class="diff-btn" data-diff="easy">😴 Easy</button><button class="diff-btn active" data-diff="medium">😐 Medium</button><button class="diff-btn" data-diff="hard">😈 Hard</button></div></div>
+      <button id="offline-start-btn" class="btn btn-bot btn-lg">Play vs Bots 🤖</button>
+    </div>
+    <div id="lobby-msg" class="lobby-msg hidden"></div>
+    <div class="lobby-info"><span id="lobby-info-text">👥 2–4 Players  •  🌐 Real-time</span></div>
+  </div>
+</div>
+
+<div id="waiting-screen" class="screen">
+  <div class="waiting-card">
+    <h2>🎮 Waiting Room</h2>
+    <p class="room-label">Room: <strong id="display-room-id">lobby</strong></p>
+    <div id="players-waiting-list" class="players-list"></div>
+    <div class="waiting-status"><div class="spinner"></div><p id="waiting-text">Waiting for players…</p></div>
+    <button id="start-btn" class="btn btn-success btn-lg hidden">▶ Start Game</button>
+    <button id="copy-room-btn" class="btn btn-outline">📋 Copy Room Link</button>
+  </div>
+</div>
+
+<div id="game-screen" class="screen">
+  <!-- Desktop left sidebar -->
+  <div class="desktop-sidebar desktop-only" id="desktop-left" style="display:none">
+    <div class="desktop-player-card" id="dcard-red"></div>
+    <div class="desktop-player-card" id="dcard-green"></div>
+    <div class="desktop-log"><div class="desktop-log-title">📋 Log</div><div class="desktop-log-entries" id="desktop-log-entries"></div></div>
+  </div>
+  <!-- Center -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <!-- Mobile top bar -->
+    <div class="top-bar" id="top-bar">
+      <div class="top-bar-spacer"></div>
+      <div class="top-dice-wrap">
+        <div class="mini-dice" id="mini-dice"><span id="mini-dice-emoji">🎲</span></div>
+        <button id="roll-btn-top" disabled>🎲 Roll</button>
+      </div>
+    </div>
+    <!-- Board -->
+    <div class="board-main"><canvas id="ludo-canvas"></canvas></div>
+    <!-- Mobile bottom bar -->
+    <div class="bottom-bar">
+      <div><div id="turn-label-bot" style="color:#a78bfa;font-size:12px;font-weight:700">Waiting…</div><div id="hint-label" style="font-size:11px;color:#7070a0;font-weight:700"></div></div>
+      <button id="log-toggle-btn">📋 Log</button>
+    </div>
+  </div>
+  <!-- Desktop right sidebar -->
+  <div class="desktop-sidebar desktop-only right" id="desktop-right" style="display:none">
+    <div class="desktop-player-card" id="dcard-yellow"></div>
+    <div class="desktop-player-card" id="dcard-blue"></div>
+    <div class="desktop-dice-area">
+      <div class="desktop-dice-face" id="desktop-dice-face"><span id="desktop-dice-emoji">🎲</span></div>
+      <button id="roll-btn" disabled>🎲 Roll Dice</button>
+      <div class="desktop-turn-label" id="desktop-turn-label">Waiting…</div>
+      <div class="desktop-hint-label" id="desktop-hint-label"></div>
+    </div>
+  </div>
+</div>
+
+<div id="log-drawer">
+  <div class="log-drawer-header">
+    <span class="log-drawer-title">📋 Game Log</span>
+    <button id="log-close-btn">✕</button>
+  </div>
+  <div class="log-entries-wrap" id="log-entries"></div>
+</div>
+
+<div id="win-overlay" class="overlay hidden">
+  <div class="win-card">
+    <div class="win-trophy">🏆</div>
+    <h1 id="win-title">Player Wins!</h1>
+    <p id="win-sub">Congratulations!</p>
+    <button class="btn btn-primary btn-lg" onclick="location.reload()">Play Again 🎲</button>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="game.js"></script>
+<script src="offline.js"></script>
+<script src="socket.js"></script>
+<script>
+function switchMode(m){
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===m));
+  document.getElementById('online-panel').classList.toggle('hidden',m!=='online');
+  document.getElementById('offline-panel').classList.toggle('hidden',m!=='offline');
+  document.getElementById('lobby-info-text').textContent=m==='offline'?'🤖 Bots ke saath khelo!':'👥 2–4 Players  •  🌐 Real-time';
+}
+document.querySelectorAll('.color-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.color-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
+document.querySelectorAll('.bot-count-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.bot-count-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
+document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
+document.getElementById('offline-start-btn').addEventListener('click',()=>{
+  const name=document.getElementById('offline-player-name').value.trim()||'Player';
+  const color=document.querySelector('.color-btn.active').dataset.color;
+  const bots=parseInt(document.querySelector('.bot-count-btn.active').dataset.count);
+  const diff=document.querySelector('.diff-btn.active').dataset.diff;
+  OfflineGame.start(name,color,bots,diff);
+});
+document.getElementById('offline-player-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('offline-start-btn').click();});
+const _urlRoom=new URLSearchParams(location.search).get('room');
+if(_urlRoom)document.getElementById('room-id').value=_urlRoom;
+document.getElementById('log-toggle-btn').addEventListener('click',()=>document.getElementById('log-drawer').classList.toggle('open'));
+document.getElementById('log-close-btn').addEventListener('click',()=>document.getElementById('log-drawer').classList.remove('open'));
+document.getElementById('ludo-canvas').addEventListener('touchstart',()=>document.getElementById('log-drawer').classList.remove('open'),{passive:true});
+</script>
+</body>
+</html>
