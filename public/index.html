@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>🎲 Ludo</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+  /* ══ LOBBY v4 — inline so no FOUC ══════════════════════════ */
+
+  /* ── 3-tab nav ─────────────────────────────────────────────── */
+  .lobby-nav {
+    display: flex; gap: 5px; margin-bottom: 20px;
+    background: rgba(255,255,255,.05); border-radius: 14px; padding: 5px;
+  }
+  .lnav-btn {
+    flex: 1; padding: 11px 6px; border: none; border-radius: 10px;
+    background: transparent; color: #7070a0;
+    font-family: 'Nunito',sans-serif; font-size: 13px; font-weight: 800;
+    cursor: pointer; transition: all .2s; min-height: 46px; line-height: 1.3;
+  }
+  .lnav-btn.active { background: linear-gradient(135deg,#7c6af7,#5a87f5); color:#fff; box-shadow: 0 4px 14px rgba(124,106,247,.4); }
+
+  /* ── Panel base ────────────────────────────────────────────── */
+  .lobby-panel { animation: panelIn .25s ease; }
+  @keyframes panelIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Section heading ───────────────────────────────────────── */
+  .sec-label {
+    font-size: 11px; font-weight: 800; color: #5555aa;
+    text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;
+  }
+
+  /* ── Color picker ──────────────────────────────────────────── */
+  .color-row { display: flex; gap: 8px; }
+  .cpick {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 10px 4px; border: 2px solid rgba(255,255,255,.08);
+    border-radius: 13px; background: rgba(255,255,255,.04);
+    cursor: pointer; transition: all .2s; min-height: 64px;
+    font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800; color: #6060a0;
+  }
+  .cpick-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.2);
+    box-shadow: 0 3px 10px rgba(0,0,0,.3);
+  }
+  .cpick.active { transform: scale(1.05); }
+  .cpick.active[data-c="red"]    { border-color:#e53935; background:rgba(229,57,53,.15);   color:#ff6b6b; }
+  .cpick.active[data-c="green"]  { border-color:#43a047; background:rgba(67,160,71,.15);   color:#69f0ae; }
+  .cpick.active[data-c="yellow"] { border-color:#fdd835; background:rgba(253,216,53,.15);  color:#ffd600; }
+  .cpick.active[data-c="blue"]   { border-color:#1e88e5; background:rgba(30,136,229,.15);  color:#82b1ff; }
+  .cpick-check { font-size: 14px; height: 14px; }
+
+  /* ── Random match finding animation ───────────────────────── */
+  .finding-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 24px 0;
+  }
+  .finding-spinner {
+    width: 52px; height: 52px;
+    border: 4px solid rgba(124,106,247,.2);
+    border-top-color: #7c6af7;
+    border-radius: 50%;
+    animation: spin2 .9s linear infinite;
+  }
+  .finding-label { font-size: 15px; font-weight: 800; color: #a78bfa; text-align: center; }
+  .finding-sub   { font-size: 12px; color: #5555a0; text-align: center; }
+  .finding-cancel { margin-top: 4px; }
+
+  /* ── Room ID display box ───────────────────────────────────── */
+  .room-id-box {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(124,106,247,.12); border: 1px solid rgba(124,106,247,.3);
+    border-radius: 11px; padding: 10px 14px; margin-bottom: 14px;
+  }
+  .room-id-label { font-size: 12px; color: #7070a0; }
+  .room-id-val   { font-size: 15px; font-weight: 900; color: #a78bfa; flex: 1; letter-spacing: 1px; }
+  .room-id-copy  {
+    background: rgba(124,106,247,.2); border: none; border-radius: 8px;
+    color: #a78bfa; font-size: 18px; cursor: pointer; padding: 4px 8px;
+    transition: background .2s;
+  }
+  .room-id-copy:active { background: rgba(124,106,247,.4); }
+
+  /* ── Players in waiting list ───────────────────────────────── */
+  .w-player {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 13px; border-radius: 12px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07);
+    margin-bottom: 8px; animation: panelIn .3s ease;
+  }
+  .w-dot  { width:13px; height:13px; border-radius:50%; flex-shrink:0; }
+  .w-name { font-weight:800; font-size:14px; flex:1; }
+  .w-you  { font-size:11px; background:rgba(167,139,250,.2); color:#a78bfa; border-radius:6px; padding:2px 7px; }
+  .w-host { font-size:11px; background:rgba(34,197,94,.15); color:#4ade80; border-radius:6px; padding:2px 7px; }
+  .w-slots-label { font-size:12px; color:#5555a0; text-align:center; margin-bottom:12px; }
+
+  /* ── Divider ───────────────────────────────────────────────── */
+  .divider { display:flex; align-items:center; gap:10px; margin:16px 0; }
+  .divider hr { flex:1; border:none; border-top:1px solid rgba(255,255,255,.08); }
+  .divider span { font-size:11px; color:#5555a0; white-space:nowrap; }
+
+  /* ── Color conflict note ───────────────────────────────────── */
+  .color-note { font-size:11px; color:#5555a0; margin-top:6px; text-align:center; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ LOBBY ══════════════ -->
+<div id="lobby-screen" class="screen active">
+  <div class="lobby-card" style="max-height:100dvh;overflow-y:auto">
+
+    <!-- Logo -->
+    <div class="lobby-logo">
+      <span class="dice-icon">🎲</span><h1>LUDO</h1><span class="dice-icon">🎲</span>
+    </div>
+    <p class="lobby-sub">Real-time Multiplayer</p>
+
+    <!-- 3-tab nav -->
+    <div class="lobby-nav">
+      <button class="lnav-btn active" onclick="showTab('random')">🌐<br/>Online</button>
+      <button class="lnav-btn"        onclick="showTab('custom')">🔒<br/>Custom Room</button>
+      <button class="lnav-btn"        onclick="showTab('bots')">🤖<br/>vs Bots</button>
+    </div>
+
+    <!-- ═══ RANDOM MATCH panel ═══ -->
+    <div id="tab-random" class="lobby-panel">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="rnd-name" placeholder="Enter your name…" maxlength="15" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <div class="sec-label">Apna Color Chuniye</div>
+        <div class="color-row" id="rnd-colors">
+          <button class="cpick active" data-c="red"    onclick="pickColor('rnd',this)"><span class="cpick-dot" style="background:#e53935"></span>Red   <span class="cpick-check">✓</span></button>
+          <button class="cpick"        data-c="green"  onclick="pickColor('rnd',this)"><span class="cpick-dot" style="background:#43a047"></span>Green <span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="yellow" onclick="pickColor('rnd',this)"><span class="cpick-dot" style="background:#fdd835"></span>Yellow<span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="blue"   onclick="pickColor('rnd',this)"><span class="cpick-dot" style="background:#1e88e5"></span>Blue  <span class="cpick-check"></span></button>
+        </div>
+        <div class="color-note">* Agar yeh color liya ho toh next available milega</div>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="doRandomMatch()">🌐 Play Online</button>
+
+      <!-- Finding animation (hidden initially) -->
+      <div id="finding-wrap" class="finding-wrap" style="display:none">
+        <div class="finding-spinner"></div>
+        <div class="finding-label">Dusre players dhundh rahe hain…</div>
+        <div class="finding-sub">Jaise hi 2 players ho jaayenge, game shuru!</div>
+        <button class="btn btn-outline finding-cancel" onclick="cancelSearch()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ═══ CUSTOM ROOM panel ═══ -->
+    <div id="tab-custom" class="lobby-panel" style="display:none">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="cst-name" placeholder="Enter your name…" maxlength="15" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <div class="sec-label">Apna Color Chuniye</div>
+        <div class="color-row" id="cst-colors">
+          <button class="cpick active" data-c="red"    onclick="pickColor('cst',this)"><span class="cpick-dot" style="background:#e53935"></span>Red   <span class="cpick-check">✓</span></button>
+          <button class="cpick"        data-c="green"  onclick="pickColor('cst',this)"><span class="cpick-dot" style="background:#43a047"></span>Green <span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="yellow" onclick="pickColor('cst',this)"><span class="cpick-dot" style="background:#fdd835"></span>Yellow<span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="blue"   onclick="pickColor('cst',this)"><span class="cpick-dot" style="background:#1e88e5"></span>Blue  <span class="cpick-check"></span></button>
+        </div>
+        <div class="color-note">* Agar already liya ho toh next available milega</div>
+      </div>
+
+      <div class="divider"><hr/><span>Room choose karo</span><hr/></div>
+
+      <!-- Create or Join -->
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button id="cst-create-btn" class="btn" style="flex:1;background:linear-gradient(135deg,#7c6af7,#5a87f5);color:#fff;min-height:48px;font-size:14px" onclick="setRoomMode('create')">✨ Create Room</button>
+        <button id="cst-join-btn"   class="btn" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#aaa;min-height:48px;font-size:14px" onclick="setRoomMode('join')">🔗 Join Room</button>
+      </div>
+
+      <div id="cst-join-field" style="display:none" class="form-group">
+        <label>Room ID</label>
+        <input type="text" id="cst-room-id" placeholder="Dosto ka Room ID daalo…" maxlength="20" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px"/>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="cst-go-btn" onclick="doCustomRoom()">🚀 Create Room</button>
+    </div>
+
+    <!-- ═══ vs BOTS panel ═══ -->
+    <div id="tab-bots" class="lobby-panel" style="display:none">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="bot-name" placeholder="Enter your name…" maxlength="15" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <div class="sec-label">Apna Color Chuniye</div>
+        <div class="color-row" id="bot-colors">
+          <button class="cpick active" data-c="red"    onclick="pickColor('bot',this)"><span class="cpick-dot" style="background:#e53935"></span>Red   <span class="cpick-check">✓</span></button>
+          <button class="cpick"        data-c="green"  onclick="pickColor('bot',this)"><span class="cpick-dot" style="background:#43a047"></span>Green <span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="yellow" onclick="pickColor('bot',this)"><span class="cpick-dot" style="background:#fdd835"></span>Yellow<span class="cpick-check"></span></button>
+          <button class="cpick"        data-c="blue"   onclick="pickColor('bot',this)"><span class="cpick-dot" style="background:#1e88e5"></span>Blue  <span class="cpick-check"></span></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="sec-label">Kitne Bots?</div>
+        <div style="display:flex;gap:8px">
+          <button class="bot-count-btn active" data-count="1">1 Bot</button>
+          <button class="bot-count-btn"        data-count="2">2 Bots</button>
+          <button class="bot-count-btn"        data-count="3">3 Bots</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="sec-label">Difficulty</div>
+        <div style="display:flex;gap:8px">
+          <button class="diff-btn"        data-diff="easy">😴 Easy</button>
+          <button class="diff-btn active" data-diff="medium">😐 Medium</button>
+          <button class="diff-btn"        data-diff="hard">😈 Hard</button>
+        </div>
+      </div>
+      <button class="btn btn-bot btn-lg" onclick="doBots()">🤖 Play vs Bots</button>
+    </div>
+
+    <div id="lobby-msg" class="lobby-msg hidden"></div>
+  </div>
+</div>
+
+<!-- ══════════════ WAITING ROOM ══════════════ -->
+<div id="waiting-screen" class="screen">
+  <div class="waiting-card">
+    <h2 id="waiting-title">🎮 Waiting Room</h2>
+
+    <!-- Room ID box (shown for custom rooms) -->
+    <div id="room-id-section" class="hidden">
+      <div class="room-id-box">
+        <div>
+          <div class="room-id-label">Room ID — dosto ko share karo</div>
+          <div class="room-id-val" id="waiting-room-id-val">—</div>
+        </div>
+        <button class="room-id-copy" id="copy-room-btn" title="Copy">📋</button>
+      </div>
+    </div>
+
+    <!-- Random match status -->
+    <div id="random-wait-info" class="hidden" style="text-align:center;margin-bottom:16px">
+      <div style="font-size:13px;color:#7070a0">🌐 Public Room — koi bhi join kar sakta hai</div>
+    </div>
+
+    <!-- Players list -->
+    <div id="players-waiting-list" style="margin-bottom:16px"></div>
+
+    <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:16px;color:#5555a0;font-size:13px">
+      <div class="spinner"></div>
+      <span id="waiting-text">Players ka intezaar…</span>
+    </div>
+
+    <button id="start-btn"   class="btn btn-success btn-lg hidden">▶ Start Game</button>
+    <button id="leave-btn"   class="btn btn-outline" style="margin-top:8px" onclick="leaveRoom()">← Leave Room</button>
+  </div>
+</div>
+
+<!-- ══════════════ GAME SCREEN ══════════════ -->
+<div id="game-screen" class="screen">
+  <div class="desktop-sidebar desktop-only" id="desktop-left" style="display:none">
+    <div class="desktop-player-card" id="dcard-red"></div>
+    <div class="desktop-player-card" id="dcard-green"></div>
+    <div class="desktop-log"><div class="desktop-log-title">📋 Log</div><div class="desktop-log-entries" id="desktop-log-entries"></div></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <div class="top-bar" id="top-bar">
+      <div class="top-bar-spacer"></div>
+      <div class="top-dice-wrap">
+        <div class="mini-dice" id="mini-dice"><span id="mini-dice-emoji">🎲</span></div>
+        <button id="roll-btn-top" disabled>🎲 Roll</button>
+      </div>
+    </div>
+    <div class="board-main"><canvas id="ludo-canvas"></canvas></div>
+    <div class="bottom-bar">
+      <div><div id="turn-label-bot" style="color:#a78bfa;font-size:12px;font-weight:700">Waiting…</div><div id="hint-label" style="font-size:11px;color:#7070a0;font-weight:700"></div></div>
+      <button id="log-toggle-btn">📋 Log</button>
+    </div>
+  </div>
+  <div class="desktop-sidebar desktop-only right" id="desktop-right" style="display:none">
+    <div class="desktop-player-card" id="dcard-yellow"></div>
+    <div class="desktop-player-card" id="dcard-blue"></div>
+    <div class="desktop-dice-area">
+      <div class="desktop-dice-face" id="desktop-dice-face"><span id="desktop-dice-emoji">🎲</span></div>
+      <button id="roll-btn" disabled>🎲 Roll Dice</button>
+      <div class="desktop-turn-label" id="desktop-turn-label">Waiting…</div>
+      <div class="desktop-hint-label" id="desktop-hint-label"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Log drawer -->
+<div id="log-drawer">
+  <div class="log-drawer-header">
+    <span class="log-drawer-title">📋 Game Log</span>
+    <button id="log-close-btn">✕</button>
+  </div>
+  <div class="log-entries-wrap" id="log-entries"></div>
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay" class="overlay hidden">
+  <div class="win-card">
+    <div class="win-trophy">🏆</div>
+    <h1 id="win-title">Player Wins!</h1>
+    <p id="win-sub">Congratulations!</p>
+    <button class="btn btn-primary btn-lg" onclick="location.reload()">Play Again 🎲</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="game.js"></script>
+<script src="offline.js"></script>
+<script src="socket.js"></script>
+
+<script>
+/* ═══ Lobby controller ══════════════════════════════════════ */
+
+let _activeTab    = 'random';
+let _roomMode     = 'create';   // 'create' or 'join'
+
+function showTab(t) {
+  _activeTab = t;
+  ['random','custom','bots'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = id === t ? 'block' : 'none';
+    document.querySelector(`.lnav-btn:nth-child(${['random','custom','bots'].indexOf(id)+1})`).classList.toggle('active', id === t);
+  });
+  // Reset finding animation
+  if (t !== 'random') _hideFinding();
+  clearLobbyMsg();
+}
+
+function pickColor(prefix, btn) {
+  document.querySelectorAll(`#${prefix === 'rnd' ? 'tab-random' : prefix === 'cst' ? 'tab-custom' : 'tab-bots'} .cpick`)
+    .forEach(b => { b.classList.remove('active'); b.querySelector('.cpick-check').textContent = ''; });
+  btn.classList.add('active');
+  btn.querySelector('.cpick-check').textContent = '✓';
+}
+
+function setRoomMode(mode) {
+  _roomMode = mode;
+  document.getElementById('cst-join-field').style.display = mode === 'join' ? 'block' : 'none';
+  document.getElementById('cst-go-btn').textContent = mode === 'create' ? '🚀 Create Room' : '🔗 Join Room';
+  const createBtn = document.getElementById('cst-create-btn');
+  const joinBtn   = document.getElementById('cst-join-btn');
+  createBtn.style.background = mode === 'create' ? 'linear-gradient(135deg,#7c6af7,#5a87f5)' : 'rgba(255,255,255,.07)';
+  createBtn.style.color      = mode === 'create' ? '#fff' : '#aaa';
+  joinBtn.style.background   = mode === 'join'   ? 'linear-gradient(135deg,#7c6af7,#5a87f5)' : 'rgba(255,255,255,.07)';
+  joinBtn.style.color        = mode === 'join'   ? '#fff' : '#aaa';
+}
+
+function doRandomMatch() {
+  const name  = document.getElementById('rnd-name').value.trim();
+  const color = document.querySelector('#tab-random .cpick.active')?.dataset.c || 'red';
+  if (!name) { showLobbyMsg('Naam likho pehle!'); return; }
+  _showFinding();
+  // socket.js will handle this
+  window._lobbyRandomMatch(name, color);
+}
+
+function cancelSearch() {
+  _hideFinding();
+  if (window._cancelSearch) window._cancelSearch();
+}
+
+function doCustomRoom() {
+  const name  = document.getElementById('cst-name').value.trim();
+  const color = document.querySelector('#tab-custom .cpick.active')?.dataset.c || 'red';
+  if (!name) { showLobbyMsg('Naam likho pehle!'); return; }
+  let roomId = '';
+  if (_roomMode === 'join') {
+    roomId = document.getElementById('cst-room-id').value.trim().toUpperCase();
+    if (!roomId) { showLobbyMsg('Room ID daalo!'); return; }
+  }
+  window._lobbyCustomRoom(name, color, roomId);
+}
+
+function doBots() {
+  const name  = document.getElementById('bot-name').value.trim() || 'Player';
+  const color = document.querySelector('#tab-bots .cpick.active')?.dataset.c || 'red';
+  const bots  = parseInt(document.querySelector('.bot-count-btn.active')?.dataset.count || '1');
+  const diff  = document.querySelector('.diff-btn.active')?.dataset.diff || 'medium';
+  OfflineGame.start(name, color, bots, diff);
+}
+
+function leaveRoom() { location.reload(); }
+
+function _showFinding() {
+  document.querySelector('#tab-random > *:not(#finding-wrap)') && null;
+  document.getElementById('finding-wrap').style.display = 'flex';
+  // hide form elements
+  document.querySelectorAll('#tab-random .form-group, #tab-random .btn-primary').forEach(e => e.style.display='none');
+}
+function _hideFinding() {
+  document.getElementById('finding-wrap').style.display = 'none';
+  document.querySelectorAll('#tab-random .form-group, #tab-random .btn-primary').forEach(e => e.style.display='');
+}
+
+function showLobbyMsg(msg) {
+  const el = document.getElementById('lobby-msg');
+  el.textContent = msg; el.classList.remove('hidden');
+}
+function clearLobbyMsg() {
+  document.getElementById('lobby-msg').classList.add('hidden');
+}
+
+/* Bot count / diff pills */
+document.querySelectorAll('.bot-count-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.bot-count-btn').forEach(x => x.classList.remove('active')); b.classList.add('active');
+}));
+document.querySelectorAll('.diff-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.diff-btn').forEach(x => x.classList.remove('active')); b.classList.add('active');
+}));
+
+/* Enter key support */
+['rnd-name','cst-name','cst-room-id'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (id === 'rnd-name') doRandomMatch();
+      else doCustomRoom();
+    }
+  });
+});
+
+/* Log drawer */
+document.getElementById('log-toggle-btn').addEventListener('click', () => document.getElementById('log-drawer').classList.toggle('open'));
+document.getElementById('log-close-btn').addEventListener('click',  () => document.getElementById('log-drawer').classList.remove('open'));
+document.getElementById('ludo-canvas').addEventListener('touchstart', () => document.getElementById('log-drawer').classList.remove('open'), {passive:true});
+
+/* Copy room link */
+document.getElementById('copy-room-btn').addEventListener('click', () => {
+  const rid  = document.getElementById('waiting-room-id-val').textContent;
+  const link = `${location.origin}?room=${rid}`;
+  navigator.clipboard.writeText(link)
+    .then(() => { if(window.LudoGame) LudoGame.showToast('📋 Link copied!'); })
+    .catch(() => { if(window.LudoGame) LudoGame.showToast('Room: ' + rid); });
+});
+
+/* URL room param for direct join */
+const _urlRoom = new URLSearchParams(location.search).get('room');
+if (_urlRoom) {
+  showTab('custom');
+  setRoomMode('join');
+  document.getElementById('cst-room-id').value = _urlRoom;
+}
+</script>
+</body>
+</html>
+
